@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Toast from './Toast'
 import JSZip from 'jszip'
+import Mousetrap from 'mousetrap'
+import { saveAs } from 'file-saver'
+import htmlToDocx from 'html-to-docx'
+import latex from 'latex.js'
 
 // Helper to convert markdown to HTML for export
 function markdownToHtml(markdown) {
@@ -12,11 +16,42 @@ function encodeForUrl(str) {
   return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
+function markdownToRtf(md) {
+  // Very basic Markdown to RTF (bold, italic, heading, list, code)
+  let rtf = '{\\rtf1\n'
+  rtf += md
+    .replace(/^# (.*)$/gm, '\\b \\fs36 $1 \\b0 \\fs24\n')
+    .replace(/\*\*(.*?)\*\*/g, '\\b $1 \\b0')
+    .replace(/\*(.*?)\*/g, '\\i $1 \\i0')
+    .replace(/`([^`]+)`/g, '{\\f1 $1}')
+    .replace(/^- (.*)$/gm, '\\bullet $1 \\par')
+    .replace(/\n/g, '\\par\n')
+  rtf += '}'
+  return rtf
+}
+
+function markdownToSlides(md) {
+  // Split by --- or H1 for slides
+  const slides = md.split(/^---$/gm)
+  return `<!DOCTYPE html>\n<html><head><meta charset='UTF-8'><title>Slides</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/white.css"></head><body><div class="reveal"><div class="slides">${slides
+    .map(s => `<section>${window.marked ? window.marked.parse(s) : s.replace(/\n/g, '<br>')}</section>`) .join('')}</div></div><script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script><script>Reveal.initialize();</script></body></html>`
+}
+
 const DEFAULT_FILE = () => ({
   id: Date.now().toString(),
   name: 'untitled.md',
   content: ''
 })
+
+const DEFAULT_SHORTCUTS = {
+  bold: 'mod+b',
+  italic: 'mod+i',
+  heading: 'mod+shift+h',
+  code: 'mod+shift+c',
+  list: 'mod+shift+l',
+}
+
+const HISTORY_LIMIT = 20
 
 const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => {
   const activeFile = files.find(f => f.id === activeFileId) || files[0]
@@ -177,6 +212,39 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
     }
   }
 
+  // Export handlers
+  const handleExportDocx = async () => {
+    const html = markdownToHtml(activeFile.content)
+    const blob = await htmlToDocx(html, null, {
+      orientation: 'portrait',
+      title: activeFile.name.replace(/\.md$/, ''),
+    })
+    saveAs(blob, activeFile.name.replace(/\.md$/, '.docx'))
+    setToast({ visible: true, message: '✅ DOCX exported!', type: 'success' })
+  }
+  const handleExportRtf = () => {
+    const rtf = markdownToRtf(activeFile.content)
+    const blob = new Blob([rtf], { type: 'application/rtf' })
+    saveAs(blob, activeFile.name.replace(/\.md$/, '.rtf'))
+    setToast({ visible: true, message: '✅ RTF exported!', type: 'success' })
+  }
+  const handleExportLatex = () => {
+    try {
+      const latexSrc = latex.parse(activeFile.content).latex || activeFile.content
+      const blob = new Blob([latexSrc], { type: 'application/x-latex' })
+      saveAs(blob, activeFile.name.replace(/\.md$/, '.tex'))
+      setToast({ visible: true, message: '✅ LaTeX exported!', type: 'success' })
+    } catch {
+      setToast({ visible: true, message: '❌ LaTeX export failed', type: 'error' })
+    }
+  }
+  const handleExportSlides = () => {
+    const html = markdownToSlides(activeFile.content)
+    const blob = new Blob([html], { type: 'text/html' })
+    saveAs(blob, activeFile.name.replace(/\.md$/, '_slides.html'))
+    setToast({ visible: true, message: '✅ Slides exported!', type: 'success' })
+  }
+
   return (
     <div className="relative flex flex-col h-full">
       <Toast message={toast.message} visible={toast.visible} onClose={closeToast} type={toast.type} />
@@ -294,6 +362,17 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
         >
           🔗 Share
         </button>
+        <div style={{ display: 'inline-block', position: 'relative' }}>
+          <button className="editor-btn export-md-btn" disabled={!activeFile.content} title="Export options" style={{ minWidth: 110 }}>
+            ⬇️ Export ▼
+          </button>
+          <div className="export-dropdown" style={{ position: 'absolute', left: 0, top: '110%', background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: 'var(--shadow)', minWidth: 180, display: 'none' }}>
+            <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportDocx} disabled={!activeFile.content}>DOCX</button>
+            <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportRtf} disabled={!activeFile.content}>RTF</button>
+            <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportLatex} disabled={!activeFile.content}>LaTeX</button>
+            <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportSlides} disabled={!activeFile.content}>Slides (HTML)</button>
+          </div>
+        </div>
       </div>
       {/* Auto-save indicator */}
       <div className={`autosave-indicator${showSaved ? ' opacity-100' : ''}`}>
