@@ -1,15 +1,27 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Toast from './Toast'
+import JSZip from 'jszip'
 
 // Helper to convert markdown to HTML for export
 function markdownToHtml(markdown) {
   return `<!DOCTYPE html>\n<html><head><meta charset='UTF-8'><title>Markdown Preview</title></head><body>${window.marked ? window.marked.parse(markdown) : markdown.replace(/\n/g, '<br>')}</body></html>`
 }
 
-// Editor component for editing markdown text
-const Editor = ({ markdown, onChange }) => {
-  // Undo/Redo history
-  const [history, setHistory] = useState([markdown])
+function encodeForUrl(str) {
+  // URL-safe base64
+  return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+const DEFAULT_FILE = () => ({
+  id: Date.now().toString(),
+  name: 'untitled.md',
+  content: ''
+})
+
+const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => {
+  const activeFile = files.find(f => f.id === activeFileId) || files[0]
+  // Undo/Redo history per file
+  const [history, setHistory] = useState([activeFile.content])
   const [historyIndex, setHistoryIndex] = useState(0)
   const isUndoAvailable = historyIndex > 0
   const isRedoAvailable = historyIndex < history.length - 1
@@ -20,39 +32,48 @@ const Editor = ({ markdown, onChange }) => {
   const [showSaved, setShowSaved] = useState(false)
   const saveTimeout = useRef(null)
   const fadeTimeout = useRef(null)
-  const prevMarkdown = useRef(markdown)
+  const prevContent = useRef(activeFile.content)
   const textareaRef = useRef(null)
+  const [renamingId, setRenamingId] = useState(null)
+  const [renameValue, setRenameValue] = useState('')
 
-  // Update history on markdown change
+  // Update history when switching files
   useEffect(() => {
-    if (markdown !== history[historyIndex]) {
+    setHistory([activeFile.content])
+    setHistoryIndex(0)
+    prevContent.current = activeFile.content
+  }, [activeFileId])
+
+  // Update history on content change
+  useEffect(() => {
+    if (activeFile.content !== history[historyIndex]) {
       const newHistory = history.slice(0, historyIndex + 1)
-      newHistory.push(markdown)
+      newHistory.push(activeFile.content)
       setHistory(newHistory)
       setHistoryIndex(newHistory.length - 1)
     }
     // eslint-disable-next-line
-  }, [markdown])
+  }, [activeFile.content])
 
   // Undo handler
   const handleUndo = useCallback(() => {
     if (isUndoAvailable) {
       const newIndex = historyIndex - 1
       setHistoryIndex(newIndex)
-      onChange(history[newIndex])
+      updateFileContent(history[newIndex])
       setToast({ visible: true, message: '↩️ Undo', type: 'success' })
     }
-  }, [isUndoAvailable, history, historyIndex, onChange])
+  }, [isUndoAvailable, history, historyIndex])
 
   // Redo handler
   const handleRedo = useCallback(() => {
     if (isRedoAvailable) {
       const newIndex = historyIndex + 1
       setHistoryIndex(newIndex)
-      onChange(history[newIndex])
+      updateFileContent(history[newIndex])
       setToast({ visible: true, message: '↪️ Redo', type: 'success' })
     }
-  }, [isRedoAvailable, history, historyIndex, onChange])
+  }, [isRedoAvailable, history, historyIndex])
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -71,7 +92,7 @@ const Editor = ({ markdown, onChange }) => {
 
   // Auto-save effect
   useEffect(() => {
-    if (prevMarkdown.current !== markdown) {
+    if (prevContent.current !== activeFile.content) {
       setShowSaved(false)
       if (saveTimeout.current) clearTimeout(saveTimeout.current)
       if (fadeTimeout.current) clearTimeout(fadeTimeout.current)
@@ -79,56 +100,122 @@ const Editor = ({ markdown, onChange }) => {
         setShowSaved(true)
         fadeTimeout.current = setTimeout(() => setShowSaved(false), 1200)
       }, 1500)
-      prevMarkdown.current = markdown
+      prevContent.current = activeFile.content
     }
     return () => {
       if (saveTimeout.current) clearTimeout(saveTimeout.current)
       if (fadeTimeout.current) clearTimeout(fadeTimeout.current)
     }
-  }, [markdown])
+  }, [activeFile.content])
+
+  // Persist files in localStorage
+  useEffect(() => {
+    localStorage.setItem('markdown-files', JSON.stringify(files))
+  }, [files])
 
   // Toast close handler
   const closeToast = () => setToast(t => ({ ...t, visible: false }))
 
-  // Clear editor and remove from localStorage
-  const handleClear = () => {
-    onChange('')
-    localStorage.removeItem('markdown')
+  // Update file content
+  const updateFileContent = (content) => {
+    setFiles(files => files.map(f => f.id === activeFileId ? { ...f, content } : f))
   }
 
-  // Export as .md file
-  const handleExportMd = () => {
-    const blob = new Blob([markdown], { type: 'text/markdown' })
+  // Tab actions
+  const handleTabClick = (id) => setActiveFileId(id)
+  const handleNewFile = () => {
+    const newFile = DEFAULT_FILE()
+    setFiles(files => [...files, newFile])
+    setActiveFileId(newFile.id)
+    setToast({ visible: true, message: '🆕 New file created', type: 'success' })
+  }
+  const handleDeleteFile = (id) => {
+    if (files.length === 1) {
+      setToast({ visible: true, message: '❌ Cannot delete the last file', type: 'error' })
+      return
+    }
+    if (window.confirm('Are you sure you want to delete this file?')) {
+      let idx = files.findIndex(f => f.id === id)
+      let newFiles = files.filter(f => f.id !== id)
+      setFiles(newFiles)
+      if (activeFileId === id) {
+        setActiveFileId(newFiles[Math.max(0, idx - 1)].id)
+      }
+      setToast({ visible: true, message: '🗑️ File deleted', type: 'success' })
+    }
+  }
+  const handleRenameFile = (id, name) => {
+    setFiles(files => files.map(f => f.id === id ? { ...f, name } : f))
+    setRenamingId(null)
+    setToast({ visible: true, message: '✏️ File renamed', type: 'success' })
+  }
+
+  // Export all as ZIP
+  const handleExportAll = async () => {
+    const zip = new JSZip()
+    files.forEach(f => zip.file(f.name, f.content))
+    const blob = await zip.generateAsync({ type: 'blob' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'markdown_export.md'
+    a.download = 'markdown_files.zip'
     a.click()
     URL.revokeObjectURL(url)
-    setToast({ visible: true, message: '✅ Markdown exported as .md file!', type: 'success' })
+    setToast({ visible: true, message: '✅ All files exported as ZIP!', type: 'success' })
   }
 
-  // Export as .html file
-  const handleExportHtml = () => {
-    const html = markdownToHtml(markdown)
-    const blob = new Blob([html], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'preview_export.html'
-    a.click()
-    URL.revokeObjectURL(url)
-    setToast({ visible: true, message: '✅ HTML preview exported!', type: 'success' })
+  // Share button handler
+  const handleShare = async () => {
+    const encoded = encodeForUrl(activeFile.content)
+    const url = `${window.location.origin}${window.location.pathname}?md=${encoded}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setToast({ visible: true, message: '🔗 Shareable URL copied!', type: 'success' })
+      if (onShare) onShare()
+    } catch {
+      setToast({ visible: true, message: '❌ Failed to copy URL', type: 'error' })
+    }
   }
 
   return (
     <div className="relative flex flex-col h-full">
-      {/* Toast notification */}
       <Toast message={toast.message} visible={toast.visible} onClose={closeToast} type={toast.type} />
+      {/* File Tabs */}
+      <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--card-bg)', padding: '0.5rem 1.5rem 0.5rem 1.5rem', gap: '0.5rem' }}>
+        {files.map(file => (
+          <div
+            key={file.id}
+            className={`editor-tab${file.id === activeFileId ? ' editor-tab-active' : ''}`}
+            onClick={() => handleTabClick(file.id)}
+            style={{ userSelect: 'none', display: 'flex', alignItems: 'center', padding: '0.4rem 1rem', borderRadius: '6px 6px 0 0', cursor: 'pointer', background: file.id === activeFileId ? 'var(--autosave-bg)' : 'transparent', border: file.id === activeFileId ? '1px solid var(--border-color)' : '1px solid transparent', borderBottom: file.id === activeFileId ? 'none' : '1px solid var(--border-color)', fontWeight: file.id === activeFileId ? 600 : 400, color: 'var(--text-color)', marginRight: '0.25rem', position: 'relative' }}
+          >
+            {renamingId === file.id ? (
+              <form onSubmit={e => { e.preventDefault(); handleRenameFile(file.id, renameValue || file.name) }} style={{ display: 'flex', alignItems: 'center' }}>
+                <input
+                  autoFocus
+                  value={renameValue}
+                  onChange={e => setRenameValue(e.target.value)}
+                  onBlur={() => setRenamingId(null)}
+                  style={{ fontSize: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '0.1rem 0.5rem', marginRight: '0.5rem', background: 'var(--card-bg)', color: 'var(--text-color)' }}
+                />
+                <button type="submit" className="editor-btn" style={{ padding: '0.2rem 0.7rem', fontSize: '1rem' }}>✔️</button>
+              </form>
+            ) : (
+              <>
+                <span style={{ marginRight: 8 }}>{file.name}</span>
+                <button className="editor-btn" style={{ padding: '0.2rem 0.7rem', fontSize: '1rem' }} onClick={e => { e.stopPropagation(); setRenamingId(file.id); setRenameValue(file.name) }}>✏️</button>
+                <button className="editor-btn" style={{ padding: '0.2rem 0.7rem', fontSize: '1rem' }} onClick={e => { e.stopPropagation(); handleDeleteFile(file.id) }}>🗑️</button>
+              </>
+            )}
+          </div>
+        ))}
+        <button className="editor-btn" style={{ marginLeft: 8, padding: '0.2rem 0.7rem', fontSize: '1rem' }} onClick={handleNewFile}>➕</button>
+        <button className="editor-btn export-md-btn" style={{ marginLeft: 'auto', padding: '0.2rem 0.9rem', fontSize: '1rem' }} onClick={handleExportAll}>⬇️ Export All</button>
+      </div>
       {/* Toolbar */}
-      <div className="flex gap-2 px-4 pt-4 pb-2 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-t-2xl">
+      <div className="editor-toolbar">
         <button
-          className="editor-btn undo-btn px-3 py-1.5 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="editor-btn undo-btn"
           onClick={handleUndo}
           disabled={!isUndoAvailable}
           title="Undo (Ctrl+Z)"
@@ -136,7 +223,7 @@ const Editor = ({ markdown, onChange }) => {
           ↩️ Undo
         </button>
         <button
-          className="editor-btn redo-btn px-3 py-1.5 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="editor-btn redo-btn"
           onClick={handleRedo}
           disabled={!isRedoAvailable}
           title="Redo (Ctrl+Y)"
@@ -147,42 +234,69 @@ const Editor = ({ markdown, onChange }) => {
       {/* Editor Textarea */}
       <textarea
         ref={textareaRef}
-        className="editor-textarea flex-1 w-full resize-none p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-none outline-none font-mono text-base rounded-b-2xl focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition shadow-inner"
-        value={markdown}
-        onChange={e => onChange(e.target.value)}
+        className="editor-textarea"
+        value={activeFile.content}
+        onChange={e => updateFileContent(e.target.value)}
         placeholder="Type your markdown here..."
         aria-label="Markdown Editor"
         spellCheck={true}
       />
       {/* Action Buttons */}
-      <div className="flex gap-2 px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-b-2xl">
+      <div className="editor-actions">
         <button
-          className="editor-btn clear-btn px-3 py-1.5 rounded-md bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 border border-red-200 dark:border-red-700 shadow-sm hover:bg-red-200 dark:hover:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={handleClear}
-          disabled={!markdown}
+          className="editor-btn clear-btn"
+          onClick={() => updateFileContent('')}
+          disabled={!activeFile.content}
           title="Clear editor"
         >
           🧹 Clear
         </button>
         <button
-          className="editor-btn export-md-btn px-3 py-1.5 rounded-md bg-blue-600 text-white border border-blue-700 shadow-sm hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={handleExportMd}
-          disabled={!markdown}
+          className="editor-btn export-md-btn"
+          onClick={() => {
+            const blob = new Blob([activeFile.content], { type: 'text/markdown' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = activeFile.name
+            a.click()
+            URL.revokeObjectURL(url)
+            setToast({ visible: true, message: `✅ ${activeFile.name} exported!`, type: 'success' })
+          }}
+          disabled={!activeFile.content}
           title="Export as .md"
         >
           ⬇️ Export .md
         </button>
         <button
-          className="editor-btn export-html-btn px-3 py-1.5 rounded-md bg-green-600 text-white border border-green-700 shadow-sm hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={handleExportHtml}
-          disabled={!markdown}
+          className="editor-btn export-html-btn"
+          onClick={() => {
+            const html = markdownToHtml(activeFile.content)
+            const blob = new Blob([html], { type: 'text/html' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = activeFile.name.replace(/\.md$/, '.html')
+            a.click()
+            URL.revokeObjectURL(url)
+            setToast({ visible: true, message: `✅ HTML exported!`, type: 'success' })
+          }}
+          disabled={!activeFile.content}
           title="Export as .html"
         >
           ⬇️ Export .html
         </button>
+        <button
+          className="editor-btn export-md-btn"
+          onClick={handleShare}
+          disabled={!activeFile.content}
+          title="Copy shareable URL"
+        >
+          🔗 Share
+        </button>
       </div>
       {/* Auto-save indicator */}
-      <div className={`autosave-indicator absolute bottom-4 right-4 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg shadow transition-opacity duration-300 ${showSaved ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`autosave-indicator${showSaved ? ' opacity-100' : ''}`}>
         💾 Auto-saved
       </div>
     </div>

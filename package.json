@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.16",
+    "html2pdf.js": "^0.10.3",
+    "jszip": "^3.10.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",

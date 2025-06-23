@@ -1,16 +1,67 @@
 import { useState, useEffect } from 'react'
 import Editor from './Editor'
 import Previewer from './Previewer'
+import Toast from './Toast'
 import './App.css'
 
-const DEFAULT_MARKDOWN = `# Welcome to the Markdown Editor!\n\nType some *Markdown* on the left, and see the **preview** on the right.\n\n\n## Features\n- Live preview\n- Syntax highlighting\n- Light/Dark mode\n\n\n\`\`\`js\n// Example code block\nfunction hello() {\n  console.log('Hello, world!');\n}\n\`\`\`
-`;
+const DEFAULT_FILE = () => ({
+  id: Date.now().toString(),
+  name: 'untitled.md',
+  content: ''
+})
+
+function decodeFromUrl(str) {
+  try {
+    str = str.replace(/-/g, '+').replace(/_/g, '/')
+    while (str.length % 4) str += '='
+    return decodeURIComponent(escape(atob(str)))
+  } catch {
+    return ''
+  }
+}
 
 function App() {
-  const [markdown, setMarkdown] = useState(DEFAULT_MARKDOWN)
+  // Toast for info/warning
+  const [infoToast, setInfoToast] = useState({ visible: false, message: '', type: 'info' })
+  // Multi-file state
+  const [files, setFiles] = useState(() => {
+    const saved = localStorage.getItem('markdown-files')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      } catch {}
+    }
+    return [DEFAULT_FILE()]
+  })
+  const [activeFileId, setActiveFileId] = useState(() => {
+    const saved = localStorage.getItem('markdown-files')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id
+      } catch {}
+    }
+    return null
+  })
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
   const [activeTab, setActiveTab] = useState('editor') // 'editor' or 'preview'
   const [isMobile, setIsMobile] = useState(false)
+
+  // On mount, check for ?md= in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const md = params.get('md')
+    if (md) {
+      const decoded = decodeFromUrl(md)
+      if (decoded) {
+        setFiles([{ id: Date.now().toString(), name: 'shared.md', content: decoded }])
+        setActiveFileId(f => f || Date.now().toString())
+        setInfoToast({ visible: true, message: 'ℹ️ Loaded Markdown from URL. Local files were replaced.', type: 'info' })
+      }
+    }
+    // eslint-disable-next-line
+  }, [])
 
   // Responsive check
   useEffect(() => {
@@ -35,11 +86,21 @@ function App() {
     localStorage.setItem('theme', theme)
   }, [theme])
 
+  // Ensure activeFileId is always valid
+  useEffect(() => {
+    if (!files.find(f => f.id === activeFileId)) {
+      setActiveFileId(files[0]?.id)
+    }
+  }, [files, activeFileId])
+
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
   const handleTab = (tab) => setActiveTab(tab)
 
+  const activeFile = files.find(f => f.id === activeFileId) || files[0]
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-color)', color: 'var(--text-color)', fontFamily: 'var(--font-sans)' }}>
+      <Toast message={infoToast.message} visible={infoToast.visible} onClose={() => setInfoToast(t => ({ ...t, visible: false }))} type={infoToast.type} />
       {/* Header with logo and theme toggle */}
       <header className="header">
         <div className="header-inner">
@@ -80,13 +141,19 @@ function App() {
           {(isMobile ? activeTab === 'editor' : true) && (
             <section className="editor-card">
               <h2 className="sr-only">Editor</h2>
-              <Editor markdown={markdown} onChange={setMarkdown} />
+              <Editor
+                files={files}
+                setFiles={setFiles}
+                activeFileId={activeFileId}
+                setActiveFileId={setActiveFileId}
+                onShare={() => setInfoToast({ visible: true, message: 'ℹ️ Share this URL with anyone to load this document.', type: 'info' })}
+              />
             </section>
           )}
           {(isMobile ? activeTab === 'preview' : true) && (
             <section className="preview-card">
               <h2 className="sr-only">Preview</h2>
-              <Previewer markdown={markdown} />
+              <Previewer markdown={activeFile?.content || ''} />
             </section>
           )}
         </main>
