@@ -122,11 +122,13 @@ const Editor = ({ markdown, onChange }) => {
   }
 
   return (
-    <div className="editor-outer" style={{ position: 'relative' }}>
+    <div className="relative flex flex-col h-full">
+      {/* Toast notification */}
       <Toast message={toast.message} visible={toast.visible} onClose={closeToast} type={toast.type} />
-      <div className="editor-toolbar">
+      {/* Toolbar */}
+      <div className="flex gap-2 px-4 pt-4 pb-2 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-t-2xl">
         <button
-          className="editor-btn undo-btn"
+          className="editor-btn undo-btn px-3 py-1.5 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleUndo}
           disabled={!isUndoAvailable}
           title="Undo (Ctrl+Z)"
@@ -134,7 +136,7 @@ const Editor = ({ markdown, onChange }) => {
           ↩️ Undo
         </button>
         <button
-          className="editor-btn redo-btn"
+          className="editor-btn redo-btn px-3 py-1.5 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleRedo}
           disabled={!isRedoAvailable}
           title="Redo (Ctrl+Y)"
@@ -142,17 +144,20 @@ const Editor = ({ markdown, onChange }) => {
           ↪️ Redo
         </button>
       </div>
+      {/* Editor Textarea */}
       <textarea
         ref={textareaRef}
-        className="editor-textarea"
+        className="editor-textarea flex-1 w-full resize-none p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-none outline-none font-mono text-base rounded-b-2xl focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition shadow-inner"
         value={markdown}
         onChange={e => onChange(e.target.value)}
         placeholder="Type your markdown here..."
         aria-label="Markdown Editor"
+        spellCheck={true}
       />
-      <div className="editor-buttons">
+      {/* Action Buttons */}
+      <div className="flex gap-2 px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-b-2xl">
         <button
-          className="editor-btn clear-btn"
+          className="editor-btn clear-btn px-3 py-1.5 rounded-md bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 border border-red-200 dark:border-red-700 shadow-sm hover:bg-red-200 dark:hover:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleClear}
           disabled={!markdown}
           title="Clear editor"
@@ -160,7 +165,7 @@ const Editor = ({ markdown, onChange }) => {
           🧹 Clear
         </button>
         <button
-          className="editor-btn export-md-btn"
+          className="editor-btn export-md-btn px-3 py-1.5 rounded-md bg-blue-600 text-white border border-blue-700 shadow-sm hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleExportMd}
           disabled={!markdown}
           title="Export as .md"
@@ -168,7 +173,7 @@ const Editor = ({ markdown, onChange }) => {
           ⬇️ Export .md
         </button>
         <button
-          className="editor-btn export-html-btn"
+          className="editor-btn export-html-btn px-3 py-1.5 rounded-md bg-green-600 text-white border border-green-700 shadow-sm hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleExportHtml}
           disabled={!markdown}
           title="Export as .html"
@@ -177,7 +182,7 @@ const Editor = ({ markdown, onChange }) => {
         </button>
       </div>
       {/* Auto-save indicator */}
-      <div className={`autosave-indicator${showSaved ? ' autosave-indicator-visible' : ''}`}>
+      <div className={`autosave-indicator absolute bottom-4 right-4 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg shadow transition-opacity duration-300 ${showSaved ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         💾 Auto-saved
       </div>
     </div>

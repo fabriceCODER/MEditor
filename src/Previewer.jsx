@@ -6,7 +6,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 // Previewer component for rendering markdown with syntax highlighting
 const Previewer = ({ markdown }) => {
   return (
-    <div className="preview-container">
+    <div className="prose prose-sm dark:prose-invert max-w-none w-full h-full p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-2xl shadow-inner overflow-auto leading-relaxed tracking-normal">
       <ReactMarkdown
         children={markdown}
         components={{
