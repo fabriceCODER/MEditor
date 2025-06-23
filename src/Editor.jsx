@@ -3,8 +3,7 @@ import Toast from './Toast'
 import JSZip from 'jszip'
 import Mousetrap from 'mousetrap'
 import { saveAs } from 'file-saver'
-import htmlToDocx from 'html-to-docx'
-import latex from 'latex.js'
+import { Document, Packer, Paragraph, TextRun } from 'docx'
 
 // Helper to convert markdown to HTML for export
 function markdownToHtml(markdown) {
@@ -212,13 +211,23 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
     }
   }
 
-  // Export handlers
+  // DOCX export using docx library
   const handleExportDocx = async () => {
-    const html = markdownToHtml(activeFile.content)
-    const blob = await htmlToDocx(html, null, {
-      orientation: 'portrait',
-      title: activeFile.name.replace(/\.md$/, ''),
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            ...activeFile.content.split('\n').map(line =>
+              new Paragraph({
+                children: [new TextRun(line)],
+              })
+            ),
+          ],
+        },
+      ],
     })
+    const blob = await Packer.toBlob(doc)
     saveAs(blob, activeFile.name.replace(/\.md$/, '.docx'))
     setToast({ visible: true, message: '✅ DOCX exported!', type: 'success' })
   }
@@ -227,16 +236,6 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
     const blob = new Blob([rtf], { type: 'application/rtf' })
     saveAs(blob, activeFile.name.replace(/\.md$/, '.rtf'))
     setToast({ visible: true, message: '✅ RTF exported!', type: 'success' })
-  }
-  const handleExportLatex = () => {
-    try {
-      const latexSrc = latex.parse(activeFile.content).latex || activeFile.content
-      const blob = new Blob([latexSrc], { type: 'application/x-latex' })
-      saveAs(blob, activeFile.name.replace(/\.md$/, '.tex'))
-      setToast({ visible: true, message: '✅ LaTeX exported!', type: 'success' })
-    } catch {
-      setToast({ visible: true, message: '❌ LaTeX export failed', type: 'error' })
-    }
   }
   const handleExportSlides = () => {
     const html = markdownToSlides(activeFile.content)
@@ -369,7 +368,6 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
           <div className="export-dropdown" style={{ position: 'absolute', left: 0, top: '110%', background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: 'var(--shadow)', minWidth: 180, display: 'none' }}>
             <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportDocx} disabled={!activeFile.content}>DOCX</button>
             <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportRtf} disabled={!activeFile.content}>RTF</button>
-            <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportLatex} disabled={!activeFile.content}>LaTeX</button>
             <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportSlides} disabled={!activeFile.content}>Slides (HTML)</button>
           </div>
         </div>
