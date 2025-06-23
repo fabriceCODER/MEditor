@@ -245,44 +245,43 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
   }
 
   return (
-    <div className="relative flex flex-col h-full">
-      <Toast message={toast.message} visible={toast.visible} onClose={closeToast} type={toast.type} />
+    <div className="relative flex flex-col h-full w-full bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800">
+      <Toast message={toast.message} visible={toast.visible} onClose={() => setToast(t => ({ ...t, visible: false }))} type={toast.type} />
       {/* File Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--card-bg)', padding: '0.5rem 1.5rem 0.5rem 1.5rem', gap: '0.5rem' }}>
+      <div className="flex items-center border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 px-4 py-2 gap-2 rounded-t-2xl">
         {files.map(file => (
           <div
             key={file.id}
-            className={`editor-tab${file.id === activeFileId ? ' editor-tab-active' : ''}`}
-            onClick={() => handleTabClick(file.id)}
-            style={{ userSelect: 'none', display: 'flex', alignItems: 'center', padding: '0.4rem 1rem', borderRadius: '6px 6px 0 0', cursor: 'pointer', background: file.id === activeFileId ? 'var(--autosave-bg)' : 'transparent', border: file.id === activeFileId ? '1px solid var(--border-color)' : '1px solid transparent', borderBottom: file.id === activeFileId ? 'none' : '1px solid var(--border-color)', fontWeight: file.id === activeFileId ? 600 : 400, color: 'var(--text-color)', marginRight: '0.25rem', position: 'relative' }}
+            className={`flex items-center px-4 py-1.5 rounded-t-lg cursor-pointer transition-colors font-medium text-sm ${file.id === activeFileId ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-b-2 border-blue-500 dark:border-blue-400' : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            onClick={() => setActiveFileId(file.id)}
           >
             {renamingId === file.id ? (
-              <form onSubmit={e => { e.preventDefault(); handleRenameFile(file.id, renameValue || file.name) }} style={{ display: 'flex', alignItems: 'center' }}>
+              <form onSubmit={e => { e.preventDefault(); handleRenameFile(file.id, renameValue || file.name) }} className="flex items-center gap-2">
                 <input
                   autoFocus
                   value={renameValue}
                   onChange={e => setRenameValue(e.target.value)}
                   onBlur={() => setRenamingId(null)}
-                  style={{ fontSize: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '0.1rem 0.5rem', marginRight: '0.5rem', background: 'var(--card-bg)', color: 'var(--text-color)' }}
+                  className="text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600"
                 />
-                <button type="submit" className="editor-btn" style={{ padding: '0.2rem 0.7rem', fontSize: '1rem' }}>✔️</button>
+                <button type="submit" className="ml-1 text-green-600 dark:text-green-400 hover:underline">✔️</button>
               </form>
             ) : (
               <>
-                <span style={{ marginRight: 8 }}>{file.name}</span>
-                <button className="editor-btn" style={{ padding: '0.2rem 0.7rem', fontSize: '1rem' }} onClick={e => { e.stopPropagation(); setRenamingId(file.id); setRenameValue(file.name) }}>✏️</button>
-                <button className="editor-btn" style={{ padding: '0.2rem 0.7rem', fontSize: '1rem' }} onClick={e => { e.stopPropagation(); handleDeleteFile(file.id) }}>🗑️</button>
+                <span className="mr-2 truncate max-w-[120px]">{file.name}</span>
+                <button className="ml-1 text-yellow-600 dark:text-yellow-400 hover:underline" onClick={e => { e.stopPropagation(); setRenamingId(file.id); setRenameValue(file.name) }}>✏️</button>
+                <button className="ml-1 text-red-600 dark:text-red-400 hover:underline" onClick={e => { e.stopPropagation(); handleDeleteFile(file.id) }}>🗑️</button>
               </>
             )}
           </div>
         ))}
-        <button className="editor-btn" style={{ marginLeft: 8, padding: '0.2rem 0.7rem', fontSize: '1rem' }} onClick={handleNewFile}>➕</button>
-        <button className="editor-btn export-md-btn" style={{ marginLeft: 'auto', padding: '0.2rem 0.9rem', fontSize: '1rem' }} onClick={handleExportAll}>⬇️ Export All</button>
+        <button className="ml-2 px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition" onClick={handleNewFile}>➕</button>
+        <button className="ml-auto px-3 py-1.5 rounded bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition" onClick={handleExportAll}>⬇️ Export All</button>
       </div>
       {/* Toolbar */}
-      <div className="editor-toolbar">
+      <div className="flex gap-2 px-4 pt-4 pb-2 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
         <button
-          className="editor-btn undo-btn"
+          className="px-3 py-1.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleUndo}
           disabled={!isUndoAvailable}
           title="Undo (Ctrl+Z)"
@@ -290,18 +289,32 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
           ↩️ Undo
         </button>
         <button
-          className="editor-btn redo-btn"
+          className="px-3 py-1.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleRedo}
           disabled={!isRedoAvailable}
           title="Redo (Ctrl+Y)"
         >
           ↪️ Redo
         </button>
+        <button
+          className="px-3 py-1.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 shadow-sm hover:bg-blue-200 dark:hover:bg-blue-800 transition ml-2"
+          onClick={() => setShowShortcuts(s => !s)}
+          title="Keyboard Shortcuts"
+        >
+          ⌨️ Shortcuts
+        </button>
+        <button
+          className="px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+          onClick={() => setShowHistory(s => !s)}
+          title="Version History"
+        >
+          🕑 History
+        </button>
       </div>
       {/* Editor Textarea */}
       <textarea
         ref={textareaRef}
-        className="editor-textarea"
+        className="flex-1 w-full min-h-[200px] p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-none outline-none font-mono text-base rounded-b-2xl focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition shadow-inner resize-none"
         value={activeFile.content}
         onChange={e => updateFileContent(e.target.value)}
         placeholder="Type your markdown here..."
@@ -309,9 +322,9 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
         spellCheck={true}
       />
       {/* Action Buttons */}
-      <div className="editor-actions">
+      <div className="flex gap-2 px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-b-2xl">
         <button
-          className="editor-btn clear-btn"
+          className="px-3 py-1.5 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 border border-red-200 dark:border-red-700 shadow-sm hover:bg-red-200 dark:hover:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => updateFileContent('')}
           disabled={!activeFile.content}
           title="Clear editor"
@@ -319,7 +332,7 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
           🧹 Clear
         </button>
         <button
-          className="editor-btn export-md-btn"
+          className="px-3 py-1.5 rounded bg-blue-600 text-white border border-blue-700 shadow-sm hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => {
             const blob = new Blob([activeFile.content], { type: 'text/markdown' })
             const url = URL.createObjectURL(blob)
@@ -336,7 +349,7 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
           ⬇️ Export .md
         </button>
         <button
-          className="editor-btn export-html-btn"
+          className="px-3 py-1.5 rounded bg-green-600 text-white border border-green-700 shadow-sm hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => {
             const html = markdownToHtml(activeFile.content)
             const blob = new Blob([html], { type: 'text/html' })
@@ -354,26 +367,22 @@ const Editor = ({ files, setFiles, activeFileId, setActiveFileId, onShare }) => 
           ⬇️ Export .html
         </button>
         <button
-          className="editor-btn export-md-btn"
+          className="px-3 py-1.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 shadow-sm hover:bg-blue-200 dark:hover:bg-blue-800 transition"
           onClick={handleShare}
           disabled={!activeFile.content}
           title="Copy shareable URL"
         >
           🔗 Share
         </button>
-        <div style={{ display: 'inline-block', position: 'relative' }}>
-          <button className="editor-btn export-md-btn" disabled={!activeFile.content} title="Export options" style={{ minWidth: 110 }}>
+        <div className="relative inline-block">
+          <button className="px-3 py-1.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition" disabled={!activeFile.content} title="Export options">
             ⬇️ Export ▼
           </button>
-          <div className="export-dropdown" style={{ position: 'absolute', left: 0, top: '110%', background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: 'var(--shadow)', minWidth: 180, display: 'none' }}>
-            <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportDocx} disabled={!activeFile.content}>DOCX</button>
-            <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportRtf} disabled={!activeFile.content}>RTF</button>
-            <button className="editor-btn" style={{ width: '100%' }} onClick={handleExportSlides} disabled={!activeFile.content}>Slides (HTML)</button>
-          </div>
+          {/* Dropdown menu can be implemented here if needed */}
         </div>
       </div>
       {/* Auto-save indicator */}
-      <div className={`autosave-indicator${showSaved ? ' opacity-100' : ''}`}>
+      <div className={`absolute bottom-4 right-4 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg shadow transition-opacity duration-300 ${showSaved ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         💾 Auto-saved
       </div>
     </div>
