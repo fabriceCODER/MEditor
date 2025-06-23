@@ -1,39 +1,19 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import Editor from './Editor'
-import Previewer from './Previewer'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import LandingPage from './pages/LandingPage'
+import Dashboard from './pages/Dashboard'
+import DocumentationPage from './pages/DocumentationPage'
+import TemplatesPage from './pages/TemplatesPage'
+import SettingsPage from './pages/SettingsPage'
+import FeedbackPage from './pages/FeedbackPage'
+import AboutPage from './pages/AboutPage'
+import NotFound from './pages/NotFound'
+import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import Toast from './Toast'
 import './App.css'
 
-const DEFAULT_FILE = () => ({
-  id: Date.now().toString(),
-  name: 'untitled.md',
-  content: ''
-})
-
-function decodeFromUrl(str) {
-  try {
-    str = str.replace(/-/g, '+').replace(/_/g, '/')
-    while (str.length % 4) str += '='
-    return decodeURIComponent(escape(atob(str)))
-  } catch {
-    return ''
-  }
-}
-
 // Placeholder page components
-function Home() {
-  return (
-    <div className="page-content">
-      <h1>Welcome to the Markdown Editor & Previewer</h1>
-      <p>Quick start, overview, and tutorial video coming soon.</p>
-      <ul>
-        <li>Use the navigation bar to explore features.</li>
-        <li>Start editing Markdown in the Editor tab.</li>
-      </ul>
-    </div>
-  )
-}
 function Documentation() {
   return (
     <div className="page-content">
@@ -47,670 +27,6 @@ function Documentation() {
 - List item
 1. Numbered item
 > Blockquote
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 'three backticks for code blocks
@@ -747,7 +63,7 @@ function About() {
       <p>This app was built for Markdown editing and previewing. Find the repo and contact info below.</p>
       <ul>
         <li><a href="https://github.com/your-repo" target="_blank" rel="noopener noreferrer">GitHub Repo</a></li>
-        <li>Email: <a href="mailto:developer@example.com">developer@example.com</a></li>
+        <li>Email: <a href="mailto:fabricecoder009@gmail.com">fabricecoder009@gmail.com</a></li>
       </ul>
     </div>
   )
@@ -765,29 +81,29 @@ function Feedback() {
   )
 }
 
-function AppRoutes(props) {
-  // Pass all props to Editor page
+const DEFAULT_FILE = () => ({
+  id: Date.now().toString(),
+  name: 'untitled.md',
+  content: ''
+})
+
+function decodeFromUrl(str) {
+  try {
+    str = str.replace(/-/g, '+').replace(/_/g, '/')
+    while (str.length % 4) str += '='
+    return decodeURIComponent(escape(atob(str)))
+  } catch {
+    return ''
+  }
+}
+
+function Layout({ children, onToggleTheme, theme }) {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/editor" element={
-        <div className="main-layout">
-          <section className="editor-card">
-            <h2 className="sr-only">Editor</h2>
-            <Editor {...props} />
-          </section>
-          <section className="preview-card">
-            <h2 className="sr-only">Preview</h2>
-            <Previewer markdown={props.files.find(f => f.id === props.activeFileId)?.content || ''} />
-          </section>
-        </div>
-      } />
-      <Route path="/docs" element={<Documentation />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/templates" element={<Templates />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/feedback" element={<Feedback />} />
-    </Routes>
+    <>
+      <Navbar onToggleTheme={onToggleTheme} theme={theme} />
+      <div className="app-main-container">{children}</div>
+      <Footer />
+    </>
   )
 }
 
@@ -816,8 +132,6 @@ function App(props) {
     return null
   })
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
-  const [activeTab, setActiveTab] = useState('editor') // 'editor' or 'preview'
-  const [isMobile, setIsMobile] = useState(false)
 
   // On mount, check for ?md= in URL
   useEffect(() => {
@@ -832,16 +146,6 @@ function App(props) {
       }
     }
     // eslint-disable-next-line
-  }, [])
-
-  // Responsive check
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
   // Theme persistence and vanilla CSS dark mode
@@ -865,33 +169,21 @@ function App(props) {
   }, [files, activeFileId])
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
-  const handleTab = (tab) => setActiveTab(tab)
-
-  const activeFile = files.find(f => f.id === activeFileId) || files[0]
 
   return (
     <Router>
       <div style={{ minHeight: '100vh', background: 'var(--bg-color)', color: 'var(--text-color)', fontFamily: 'var(--font-sans)' }}>
-        {/* Navigation Bar */}
-        <nav className="nav-bar" style={{ background: 'var(--header-bg)', borderBottom: '1px solid var(--border-color)', padding: '0.5rem 0' }}>
-          <div className="header-inner">
-            <span className="logo">M</span>
-            <span className="header-title">Markdown Editor & Previewer</span>
-            <div style={{ display: 'flex', gap: 16, marginLeft: 'auto' }}>
-              <Link to="/">Home</Link>
-              <Link to="/editor">Editor</Link>
-              <Link to="/docs">Docs</Link>
-              <Link to="/settings">Settings</Link>
-              <Link to="/templates">Templates</Link>
-              <Link to="/about">About</Link>
-              <Link to="/feedback">Feedback</Link>
-            </div>
-          </div>
-        </nav>
-        {/* Main content container */}
-        <div className="app-main-container">
-          <AppRoutes {...props} />
-        </div>
+        <Toast message={infoToast.message} visible={infoToast.visible} onClose={() => setInfoToast(t => ({ ...t, visible: false }))} type={infoToast.type} />
+        <Routes>
+          <Route path="/" element={<Layout onToggleTheme={toggleTheme} theme={theme}><LandingPage onToggleTheme={toggleTheme} theme={theme} /></Layout>} />
+          <Route path="/dashboard" element={<Layout onToggleTheme={toggleTheme} theme={theme}><Dashboard files={files} setFiles={setFiles} activeFileId={activeFileId} setActiveFileId={setActiveFileId} theme={theme} onToggleTheme={toggleTheme} /></Layout>} />
+          <Route path="/docs" element={<Layout onToggleTheme={toggleTheme} theme={theme}><DocumentationPage /></Layout>} />
+          <Route path="/templates" element={<Layout onToggleTheme={toggleTheme} theme={theme}><TemplatesPage /></Layout>} />
+          <Route path="/settings" element={<Layout onToggleTheme={toggleTheme} theme={theme}><SettingsPage /></Layout>} />
+          <Route path="/feedback" element={<Layout onToggleTheme={toggleTheme} theme={theme}><FeedbackPage /></Layout>} />
+          <Route path="/about" element={<Layout onToggleTheme={toggleTheme} theme={theme}><AboutPage /></Layout>} />
+          <Route path="*" element={<Layout onToggleTheme={toggleTheme} theme={theme}><NotFound /></Layout>} />
+        </Routes>
       </div>
     </Router>
   )
