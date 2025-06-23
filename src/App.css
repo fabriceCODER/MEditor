@@ -1,0 +1,263 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+.editor-outer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-textarea {
+  flex: 1;
+}
+
+.editor-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  justify-content: flex-start;
+}
+
+.editor-btn {
+  padding: 0.5rem 1.1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--button-bg);
+  color: var(--button-text);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, opacity 0.2s;
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.editor-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.editor-btn:not(:disabled):hover {
+  background: var(--button-hover-bg);
+}
+
+.clear-btn {
+  /* Optionally, a distinct color for clear */
+  border-color: #e57373;
+  color: #e57373;
+}
+.clear-btn:not(:disabled):hover {
+  background: #ffeaea;
+}
+
+.export-md-btn {
+  /* Optionally, a distinct color for md export */
+  border-color: #1976d2;
+  color: #1976d2;
+}
+.export-md-btn:not(:disabled):hover {
+  background: #e3f0ff;
+}
+
+.export-html-btn {
+  /* Optionally, a distinct color for html export */
+  border-color: #388e3c;
+  color: #388e3c;
+}
+.export-html-btn:not(:disabled):hover {
+  background: #eaffea;
+}
+
+.tab-toggle-group {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.5rem 0;
+}
+
+.tab-toggle-btn {
+  padding: 0.5rem 1.2rem;
+  border: 1px solid var(--border);
+  background: var(--button-bg);
+  color: var(--button-text);
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  outline: none;
+}
+.tab-toggle-btn-active {
+  background: var(--panel-bg);
+  color: var(--text);
+  border-bottom: 2px solid var(--text);
+  font-weight: bold;
+  z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .tab-toggle-group {
+    display: none;
+  }
+  .main {
+    flex-direction: row;
+    gap: 2rem;
+    padding: 2rem;
+    height: calc(100vh - 80px);
+  }
+}
+
+@media (max-width: 767px) {
+  .main {
+    flex-direction: column;
+    gap: 0;
+    padding: 0.5rem;
+    height: auto;
+  }
+  .main-mobile {
+    min-height: 0;
+    height: auto;
+  }
+  .editor-section, .preview-section {
+    min-height: 250px;
+    height: 60vh;
+    margin-bottom: 0.5rem;
+  }
+  .editor-wrapper, .preview-wrapper {
+    border-radius: 0 0 8px 8px;
+  }
+  .editor-section h2, .preview-section h2 {
+    display: none;
+  }
+}
+
+.toast-notification {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  min-width: 220px;
+  max-width: 320px;
+  z-index: 1000;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10), 0 1.5px 4px 0 rgba(0,0,0,0.08);
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-20px);
+  transition: opacity 0.3s, transform 0.3s;
+  background: var(--toast-bg, #fff);
+  color: var(--toast-text, #222);
+}
+.toast-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.toast-success {
+  --toast-bg: #f0fdf4;
+  --toast-text: #166534;
+  border: 1px solid #bbf7d0;
+}
+.light-theme .toast-notification {
+  background: #fff;
+  color: #222;
+}
+.dark-theme .toast-notification {
+  background: #23272f;
+  color: #f3f3f3;
+  border: 1px solid #334155;
+}
+
+.autosave-indicator {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--toast-bg, #fff);
+  color: var(--toast-text, #222);
+  padding: 0.4rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.98rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  transform: translateY(10px);
+  z-index: 900;
+}
+.autosave-indicator-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.light-theme .autosave-indicator {
+  background: #f8fafc;
+  color: #222;
+}
+.dark-theme .autosave-indicator {
+  background: #23272f;
+  color: #f3f3f3;
+  border: 1px solid #334155;
+}
+
+.editor-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.undo-btn, .redo-btn {
+  border-color: #a3a3a3;
+  color: #444;
+  background: var(--button-bg);
+}
+.undo-btn:not(:disabled):hover, .redo-btn:not(:disabled):hover {
+  background: #f3f4f6;
+}
+.undo-btn:disabled, .redo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
