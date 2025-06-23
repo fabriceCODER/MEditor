@@ -1,176 +1,305 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ====== CSS Variables for Theming ====== */
+:root {
+  --font-sans: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-mono: 'Fira Code', 'Consolas', 'Menlo', monospace;
+  --bg-color: #f7fafc;
+  --header-bg: #fff;
+  --card-bg: #fff;
+  --border-color: #e2e8f0;
+  --text-color: #222;
+  --text-secondary: #444;
+  --shadow: 0 4px 16px rgba(0,0,0,0.08);
+  --button-bg: #2563eb;
+  --button-bg-hover: #174ea6;
+  --button-text: #fff;
+  --button-disabled-bg: #b6c3d1;
+  --button-disabled-text: #e5e7eb;
+  --button-secondary-bg: #e5e7eb;
+  --button-secondary-hover: #cbd5e1;
+  --button-secondary-text: #222;
+  --autosave-bg: #f1f5f9;
+  --autosave-text: #2563eb;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.dark-mode {
+  --bg-color: #181a1b;
+  --header-bg: #23272f;
+  --card-bg: #23272f;
+  --border-color: #2d3748;
+  --text-color: #f0f0f0;
+  --text-secondary: #b5b5b5;
+  --shadow: 0 4px 16px rgba(0,0,0,0.18);
+  --button-bg: #2563eb;
+  --button-bg-hover: #174ea6;
+  --button-text: #fff;
+  --button-disabled-bg: #334155;
+  --button-disabled-text: #888;
+  --button-secondary-bg: #23272f;
+  --button-secondary-hover: #2d3748;
+  --button-secondary-text: #f0f0f0;
+  --autosave-bg: #23272f;
+  --autosave-text: #60a5fa;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-.editor-outer {
-  display: flex;
-  flex-direction: column;
+html, body, #root {
   height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background 0.3s, color 0.3s;
 }
 
-.editor-textarea {
-  flex: 1;
-}
-
-.editor-buttons {
+/* ====== Header & Logo ====== */
+.header {
+  width: 100%;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 30;
   display: flex;
-  gap: 1rem;
-  margin-top: 0.75rem;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 0 0;
 }
-
-.editor-btn {
-  padding: 0.5rem 1.1rem;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--button-bg);
-  color: var(--button-text);
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 20px;
+}
+.logo {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #2563eb 60%, #a21caf 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-right: 0.75rem;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.12);
+}
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-color);
+}
+.theme-toggle-btn {
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, opacity 0.2s;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  margin-left: 1rem;
+}
+.theme-toggle-btn:hover {
+  background: var(--button-secondary-hover);
+}
+
+/* ====== Main Container ====== */
+.app-main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 20px 2rem 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ====== Layout: Editor & Previewer Cards ====== */
+.main-layout {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+}
+.editor-card, .preview-card {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  overflow: hidden;
+  transition: background 0.3s, border 0.3s;
+}
+
+/* ====== Toolbar & Buttons ====== */
+.editor-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 1rem 1.5rem 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+}
+.editor-btn {
+  padding: 0.5rem 1.1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s, opacity 0.2s;
   outline: none;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
+.editor-btn:not(:disabled):hover {
+  background: var(--button-secondary-hover);
+}
 .editor-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.editor-btn:not(:disabled):hover {
-  background: var(--button-hover-bg);
-}
-
 .clear-btn {
-  /* Optionally, a distinct color for clear */
-  border-color: #e57373;
-  color: #e57373;
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
 }
 .clear-btn:not(:disabled):hover {
-  background: #ffeaea;
+  background: #fecaca;
 }
-
 .export-md-btn {
-  /* Optionally, a distinct color for md export */
-  border-color: #1976d2;
-  color: #1976d2;
-}
-.export-md-btn:not(:disabled):hover {
-  background: #e3f0ff;
-}
-
-.export-html-btn {
-  /* Optionally, a distinct color for html export */
-  border-color: #388e3c;
-  color: #388e3c;
-}
-.export-html-btn:not(:disabled):hover {
-  background: #eaffea;
-}
-
-.tab-toggle-group {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin: 0.5rem 0 0.5rem 0;
-}
-
-.tab-toggle-btn {
-  padding: 0.5rem 1.2rem;
-  border: 1px solid var(--border);
   background: var(--button-bg);
   color: var(--button-text);
-  font-size: 1rem;
-  font-weight: 500;
-  border-radius: 6px 6px 0 0;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, border 0.2s;
+  border-color: #2563eb;
+}
+.export-md-btn:not(:disabled):hover {
+  background: var(--button-bg-hover);
+}
+.export-html-btn {
+  background: #22c55e;
+  color: #fff;
+  border-color: #16a34a;
+}
+.export-html-btn:not(:disabled):hover {
+  background: #16a34a;
+}
+.undo-btn, .redo-btn {
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+}
+.undo-btn:not(:disabled):hover, .redo-btn:not(:disabled):hover {
+  background: var(--button-secondary-hover);
+}
+
+/* ====== Editor Textarea ====== */
+.editor-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 200px;
+  padding: 1.5rem;
+  border: none;
   outline: none;
+  resize: none;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  background: transparent;
+  color: var(--text-color);
+  box-sizing: border-box;
+  border-radius: 0 0 18px 18px;
+  transition: background 0.3s, color 0.3s;
 }
-.tab-toggle-btn-active {
-  background: var(--panel-bg);
-  color: var(--text);
-  border-bottom: 2px solid var(--text);
-  font-weight: bold;
-  z-index: 1;
-}
-
-@media (min-width: 768px) {
-  .tab-toggle-group {
-    display: none;
-  }
-  .main {
-    flex-direction: row;
-    gap: 2rem;
-    padding: 2rem;
-    height: calc(100vh - 80px);
-  }
+.editor-textarea:focus {
+  background: var(--autosave-bg);
+  outline: 2px solid #2563eb;
 }
 
-@media (max-width: 767px) {
-  .main {
-    flex-direction: column;
-    gap: 0;
-    padding: 0.5rem;
-    height: auto;
-  }
-  .main-mobile {
-    min-height: 0;
-    height: auto;
-  }
-  .editor-section, .preview-section {
-    min-height: 250px;
-    height: 60vh;
-    margin-bottom: 0.5rem;
-  }
-  .editor-wrapper, .preview-wrapper {
-    border-radius: 0 0 8px 8px;
-  }
-  .editor-section h2, .preview-section h2 {
-    display: none;
-  }
+/* ====== Action Buttons Row ====== */
+.editor-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--card-bg);
 }
 
+/* ====== Previewer ====== */
+.preview-content {
+  flex: 1;
+  width: 100%;
+  padding: 1.5rem;
+  overflow: auto;
+  color: var(--text-color);
+  background: transparent;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.preview-content h1, .preview-content h2, .preview-content h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.preview-content code {
+  font-family: var(--font-mono);
+  background: #f3f4f6;
+  color: #b91c1c;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.98em;
+}
+.dark-mode .preview-content code {
+  background: #23272f;
+  color: #fbbf24;
+}
+.preview-content pre {
+  background: #f3f4f6;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.98em;
+}
+.dark-mode .preview-content pre {
+  background: #23272f;
+}
+
+/* ====== Autosave Indicator ====== */
+.autosave-indicator {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--autosave-bg);
+  color: var(--autosave-text);
+  padding: 0.4rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.98rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  transform: translateY(10px);
+  z-index: 900;
+}
+.autosave-indicator.opacity-100 {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ====== Toast Notification ====== */
 .toast-notification {
   position: fixed;
   top: 1.5rem;
@@ -187,77 +316,84 @@
   pointer-events: none;
   transform: translateY(-20px);
   transition: opacity 0.3s, transform 0.3s;
-  background: var(--toast-bg, #fff);
-  color: var(--toast-text, #222);
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
 }
 .toast-visible {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
 }
-.toast-success {
-  --toast-bg: #f0fdf4;
-  --toast-text: #166534;
-  border: 1px solid #bbf7d0;
-}
-.light-theme .toast-notification {
-  background: #fff;
-  color: #222;
-}
-.dark-theme .toast-notification {
-  background: #23272f;
-  color: #f3f3f3;
-  border: 1px solid #334155;
+
+/* ====== Responsive Layout ====== */
+@media (max-width: 900px) {
+  .app-main-container {
+    padding: 1rem 4px;
+    gap: 1rem;
+  }
+  .main-layout {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .editor-card, .preview-card {
+    min-height: 250px;
+  }
 }
 
-.autosave-indicator {
-  position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  background: var(--toast-bg, #fff);
-  color: var(--toast-text, #222);
-  padding: 0.4rem 1rem;
-  border-radius: 0.75rem;
-  font-size: 0.98rem;
-  font-weight: 500;
-  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s, transform 0.3s;
-  transform: translateY(10px);
-  z-index: 900;
-}
-.autosave-indicator-visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-.light-theme .autosave-indicator {
-  background: #f8fafc;
-  color: #222;
-}
-.dark-theme .autosave-indicator {
-  background: #23272f;
-  color: #f3f3f3;
-  border: 1px solid #334155;
+@media (max-width: 600px) {
+  .header-inner {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 8px;
+  }
+  .app-main-container {
+    padding: 0.5rem 2px;
+  }
+  .editor-toolbar, .editor-actions {
+    padding: 0.5rem 0.5rem;
+  }
+  .preview-content, .editor-textarea {
+    padding: 0.75rem;
+    font-size: 0.98rem;
+  }
 }
 
-.editor-toolbar {
+/* ====== Tab Toggle Buttons for Mobile ====== */
+.tab-toggle-group {
   display: flex;
+  justify-content: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  align-items: center;
+  margin: 0.5rem 0 0.5rem 0;
+}
+.tab-toggle-btn {
+  padding: 0.5rem 1.2rem;
+  border: 1px solid var(--border-color);
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  outline: none;
+}
+.tab-toggle-btn-active {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-bottom: 2px solid var(--button-bg);
+  font-weight: bold;
+  z-index: 1;
 }
 
-.undo-btn, .redo-btn {
-  border-color: #a3a3a3;
-  color: #444;
-  background: var(--button-bg);
-}
-.undo-btn:not(:disabled):hover, .redo-btn:not(:disabled):hover {
-  background: #f3f4f6;
-}
-.undo-btn:disabled, .redo-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* ====== Utility ====== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
 }
